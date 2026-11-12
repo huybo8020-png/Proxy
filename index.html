@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head><base href="https://okmod.sbs/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>OKMOD · Token truy cập</title>
+<style>
+  :root{--bg:#050506;--card:#111114;--line:#27272a;--txt:#f4f4f5;--mut:#8b8b93;--acc:#e4e4e7}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100dvh;background:radial-gradient(900px 500px at 50% -10%,#1b1b20 0%,var(--bg) 60%);
+       color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+       display:flex;align-items:center;justify-content:center;padding:20px}
+  .wrap{width:100%;max-width:440px}
+  .brand{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:16px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e}
+  .brand b{font-size:15px;letter-spacing:.14em}
+  .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .tab{flex:1;text-align:center;padding:11px;border-radius:12px;border:1px solid var(--line);
+       background:#101014;color:var(--mut);font-weight:700;font-size:13px;letter-spacing:.04em;cursor:pointer}
+  .tab.on{background:var(--acc);color:#09090b;border-color:var(--acc)}
+  .card{background:linear-gradient(180deg,#141418,#0d0d10);border:1px solid var(--line);
+        border-radius:16px;padding:20px}
+  h1{font-size:18px;margin:0 0 6px}
+  p.sub{margin:0 0 14px;color:var(--mut);font-size:13px;line-height:1.5}
+  ul{margin:0 0 16px;padding-left:18px;color:var(--mut);font-size:13px;line-height:1.7}
+  button.main{width:100%;border:0;border-radius:12px;padding:14px;font-size:15px;font-weight:600;
+         background:var(--acc);color:#09090b;cursor:pointer}
+  button.main:disabled{opacity:.5}
+  .out{margin-top:14px;display:none}
+  .key{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;letter-spacing:.5px;
+       background:#0a0a0c;border:1px dashed #3f3f46;border-radius:10px;padding:14px;text-align:center;
+       word-break:break-all;cursor:pointer}
+  .hint{margin-top:8px;font-size:12px;color:var(--mut);text-align:center}
+  .err{margin-top:12px;font-size:13px;color:#f87171;text-align:center;display:none}
+  .links{margin-top:14px}
+  .dl{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding:12px;
+      border:1px solid var(--line);background:#15151a;border-radius:12px;color:var(--txt);text-decoration:none;
+      font-size:14px;font-weight:600}
+  .dl:active{opacity:.8}
+  .tg{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;padding:12px;
+      border:1px solid #1f3a5f;background:#0d1622;border-radius:12px;color:#7dd3fc;text-decoration:none;
+      font-size:14px;font-weight:600}
+  .note{margin-top:8px;font-size:11px;color:#52525b;text-align:center;line-height:1.5}
+  .foot{margin-top:16px;text-align:center;font-size:11px;color:#52525b}
+  .videoWrap{margin-top:14px;display:flex;flex-direction:column;align-items:center}
+  .videoLabel{font-size:11px;color:#8b8b93;margin-bottom:6px}
+  .videoWrap video{width:100%;max-width:240px;height:auto;border-radius:10px;background:#000;display:block}
+  [hidden]{display:none!important}
+  .portal-nav{display:flex;gap:6px;padding:5px;background:#0a0a0d;border:1px solid var(--line);border-radius:14px;margin-bottom:18px}
+  .portal-nav button{flex:1;border:0;border-radius:9px;background:transparent;color:var(--mut);padding:11px 8px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
+  .portal-nav button.active{background:#26262d;color:var(--txt)}
+  .eyebrow{font-size:11px;letter-spacing:.16em;color:#a3e635;font-weight:700;margin-bottom:14px;text-transform:uppercase}
+  .portal-title{font-size:27px;line-height:1.2;letter-spacing:-.7px;margin:0 0 12px}
+  .portal-label{display:block;margin:24px 0 8px;font-size:13px;font-weight:600}
+  .portal-input{width:100%;padding:14px;border:1px solid #383840;border-radius:10px;background:#08080b;color:var(--txt);font:14px ui-monospace,monospace;outline:none}
+  .portal-input:focus{border-color:#a3e635;box-shadow:0 0 0 3px #a3e63516}
+  .portal-help{font-size:12px;line-height:1.6;color:var(--mut);margin:10px 0 18px}
+  .portal-main{width:100%;border:0;border-radius:11px;padding:14px;background:#a3e635;color:#142005;font-size:14px;font-weight:750;cursor:pointer}
+  .portal-main:disabled,.portal-secondary:disabled{opacity:.5;cursor:wait}
+  .portal-secondary{border:1px solid #383840;background:#1b1b21;color:var(--txt);border-radius:10px;padding:12px;font-size:13px;font-weight:600;cursor:pointer}
+  .portal-actions{display:flex;gap:10px;margin:14px 0 20px}.portal-actions button{flex:1}
+  .token-value{display:block;width:100%;resize:none;min-height:112px;padding:14px;background:#08080b;border:1px dashed #44444e;border-radius:12px;color:#d9f99d;word-break:break-all;font:14px/1.8 ui-monospace,monospace;overflow-wrap:anywhere}
+  .download-status{border:1px solid #2d4222;background:#14200f;padding:13px;border-radius:10px;font-size:12px;line-height:1.6;margin-top:14px;color:#c7e7b2}
+  .portal-error{color:#fca5a5;font-size:13px;line-height:1.6;margin-top:12px}.portal-error:empty{display:none}
+  .account-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;font-size:12px;color:var(--mut)}
+  .account-bar strong{display:block;color:var(--txt);font-size:16px;margin-bottom:5px}.account-bar button{padding:9px 12px}
+  .portal-foot{text-align:center;color:#71717a;font-size:11px;line-height:1.6;margin:16px 0 4px}
+
+  .free-history-row{padding:12px 0;border-top:1px solid var(--line)}
+  .free-history-label{font-size:12px;color:var(--mut);margin-bottom:7px;overflow-wrap:anywhere}
+  .free-history-key{font:13px/1.6 ui-monospace,monospace;overflow-wrap:anywhere;margin-bottom:8px}
+  #free-history .portal-actions{flex-wrap:wrap;margin-bottom:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="dot"></span><b>OKMOD · TRUY CẬP</b></div>
+  <section id="access-auth">
+    <nav class="portal-nav" aria-label="Truy cập tài khoản">
+      <button type="button" id="nav-login" class="active" onclick="showAccess('login')">Đăng nhập</button>
+      <button type="button" id="nav-register" onclick="showAccess('register')">Tạo token</button>
+    </nav>
+    <div class="card" id="access-login">
+      <div class="eyebrow">Bảng điều khiển OKMOD</div>
+      <h1 class="portal-title">Chào mừng trở lại.</h1>
+      <p class="sub">Đăng nhập bằng token truy cập để mở trang quản lý và tạo key.</p>
+      <form id="access-login-form">
+        <label class="portal-label" for="access-token-input">Token truy cập</label>
+        <input class="portal-input" id="access-token-input" type="password" placeholder="Dán token truy cập của bạn" autocomplete="off" autocapitalize="none" spellcheck="false" required minlength="64" maxlength="64" aria-describedby="access-token-help">
+        <p class="portal-help" id="access-token-help">Sử dụng token bạn đã tạo tại trang đăng ký.</p>
+        <button class="portal-main" id="access-login-btn" type="submit">Truy cập bảng điều khiển</button>
+      </form>
+      <div class="portal-error" id="access-login-error" role="alert"></div>
+    </div>
+    <div class="card" id="access-register" hidden>
+      <div class="eyebrow">Tạo tài khoản</div>
+      <h1 class="portal-title">Một token.<br>Một tài khoản của bạn.</h1>
+      <p class="sub">Không cần email hay mật khẩu. Tạo token truy cập để bắt đầu sử dụng bảng điều khiển.</p>
+      <p class="portal-help">Hãy lưu file token ngay sau khi tạo. Đây là thông tin đăng nhập duy nhất của bạn.</p>
+      <button class="portal-main" id="access-register-btn" type="button" onclick="generateAccessToken()">Tạo token truy cập</button>
+      <div class="portal-error" id="access-register-error" role="alert"></div>
+    </div>
+    <div class="card" id="access-generated" hidden>
+      <div class="eyebrow">Tạo thành công</div>
+      <h1 class="portal-title">Token truy cập đã tạo</h1>
+      <p class="sub">Lưu token này để đăng nhập lại vào tài khoản của bạn.</p>
+      <textarea class="token-value" id="generated-access-token" readonly aria-label="Token truy cập đã tạo" spellcheck="false"></textarea>
+      <div class="download-status" id="access-download-status" role="status">File sao lưu token đã sẵn sàng.</div>
+      <div class="portal-actions">
+        <button class="portal-secondary" id="access-copy-btn" type="button" onclick="copyAccessToken()">Sao chép</button>
+        <button class="portal-secondary" type="button" onclick="downloadAccessToken()">Tải lại file</button>
+      </div>
+      <button class="portal-main" type="button" onclick="openAccessDashboard()">Truy cập bảng điều khiển</button>
+      <p class="portal-help">Hãy lưu file token ngay. Đây là thông tin đăng nhập duy nhất của bạn.</p>
+      <div class="portal-error" id="access-generated-error" role="alert"></div>
+    </div>
+    <p class="portal-foot">Token truy cập dùng để đăng nhập trang quản lý.<br>Key trong game được tạo riêng bên trong bảng điều khiển.</p>
+  </section>
+  <section id="access-dashboard" hidden>
+  <div class="account-bar"><div><strong>Bảng điều khiển</strong><span id="access-account-label"></span></div><button class="portal-secondary" type="button" onclick="logoutAccess()">Đăng xuất</button></div>
+  <div class="brand"><span class="dot"></span><b id="brandName">SOPHIA · TẠO KEY</b></div>
+
+  <div class="tabs">
+    <div class="tab" id="tab-mizze" onclick="switchTab('mizze')">MIZZE</div>
+    <div class="tab on" id="tab-sophia" onclick="switchTab('sophia')">SOPHIA</div>
+    <div class="tab" id="tab-cio" onclick="switchTab('cio')">CHEATIOSVIP</div>
+    <div class="tab" id="tab-astra" onclick="switchTab('astra')">ASTRA</div>
+    <div class="tab" id="tab-oxcheats" style="grid-column:1/-1" onclick="switchTab('oxcheats')">OKMOD</div>
+    <div class="tab" id="tab-okmod-swift" style="grid-column:1/-1" onclick="switchTab('okmod-swift')">OKMOD-SWIFT</div>
+    <div class="tab" id="tab-hunterff" style="grid-column:1/-1" onclick="switchTab('hunterff')">HUNTERFF</div>
+    <div class="tab" id="tab-intex" style="grid-column:1/-1" onclick="switchTab('intex')">INTEXX</div>
+  </div>
+
+  <div class="card" id="card-mizze" style="display:none">
+    <h1>Tạo key MIZZE</h1>
+    <p class="sub free-quota-label">Miễn phí sau khi đăng nhập. Hạn mức dùng chung theo tài khoản và mạng.</p>
+    <ul>
+      <li>Hạn dùng: <b class="free-key-days">6 ngày</b> (tính từ lần kích hoạt đầu tiên)</li>
+      <li>1 key dùng cho 1 thiết bị</li>
+      <li>Định dạng: <code>TELE:@okvipmod-XXXX</code></li>
+      <li>Dùng key + mật khẩu bên dưới trong menu <b>Mizze</b></li>
+    </ul>
+    <button class="main" id="btn-mizze" onclick="make('mizze')">TẠO KEY MIZZE</button>
+    <div class="err" id="err-mizze"></div>
+    <div class="out" id="out-mizze">
+      <div class="key" id="key-mizze" onclick="copyKey('mizze')"></div>
+      <div class="hint" id="hint-mizze">Bấm vào key để copy</div>
+      <div class="hint" id="pw-mizze" onclick="copyPw('mizze')"></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-sophia">
+    <h1>Tạo key SOPHIA</h1>
+    <p class="sub free-quota-label">Hạn mức dùng chung theo tài khoản và mạng. Nhập key này trong cửa sổ xác thực của game.</p>
+    <ul>
+      <li>Hạn dùng: <b class="free-key-days">6 ngày</b> (tính từ lần kích hoạt đầu tiên)</li>
+      <li>1 key dùng cho 1 thiết bị</li>
+      <li>Định dạng: <code>TELE:@okvipmod-SOPHIA-XXXX</code></li>
+    </ul>
+    <button class="main" id="btn-sophia" onclick="make('sophia')">TẠO KEY SOPHIA</button>
+    <div class="err" id="err-sophia"></div>
+    <div class="out" id="out-sophia">
+      <div class="key" id="key-sophia" onclick="copyKey('sophia')"></div>
+      <div class="hint" id="hint-sophia">Bấm vào key để copy</div>
+      <div class="hint" id="pw-sophia" onclick="copyPw('sophia')"></div>
+    </div>
+    <div class="links">
+      <a class="dl" href="/downloads/proxypin-sophia.json" download="sophia-proxypin.json">⬇️ Tải file ProxyPin (SOPHIA)</a>
+      <a class="dl" href="/setup/ca.mobileconfig">🔒 Cài CA (dùng ProxyPin)</a>
+    </div>
+  </div>
+
+  <div class="card" id="card-cio" style="display:none">
+    <h1>Tạo key CHEATIOSVIP</h1>
+    <p class="sub free-quota-label">Miễn phí sau khi đăng nhập. Hạn mức dùng chung theo tài khoản và mạng.</p>
+    <ul>
+      <li>Hạn dùng: <b class="free-key-days">6 ngày</b> (tính từ lần kích hoạt đầu tiên)</li>
+      <li>1 key dùng cho 1 thiết bị (gắn HWID)</li>
+      <li>Định dạng: <code>TELE:@okmodvip-XXXX</code></li>
+      <li>Kích hoạt tại <code>okmod.sbs/kich-hoat/</code></li>
+    </ul>
+    <button class="main" id="btn-cio" onclick="make('cio')">TẠO KEY CHEATIOSVIP</button>
+    <div class="err" id="err-cio"></div>
+    <div class="out" id="out-cio">
+      <div class="key" id="key-cio" onclick="copyKey('cio')"></div>
+      <div class="hint" id="hint-cio">Bấm vào key để copy</div>
+      <div class="hint" id="pw-cio" onclick="copyPw('cio')"></div>
+    </div>
+    <div class="links">
+      <a class="dl" href="/CheatiOSVip.json" download="okmod-cio-proxypin.json">⬇️ Tải file ProxyPin (CHEATIOSVIP)</a>
+      <a class="dl" href="/cio/setup/cert.mobileconfig">🔐 Cài profile (CA + Proxy)</a>
+    </div>
+    <div class="videoWrap">
+      <div class="videoLabel">Video hướng dẫn cài Proxy WiFi</div>
+      <video controls playsinline preload="metadata" src="/video/cio-proxy-wifi.mp4?v=1"></video>
+    </div>
+  </div>
+
+  <div class="card" id="card-astra" style="display:none">
+    <h1>Tạo key ASTRA</h1>
+    <p class="sub free-quota-label">Miễn phí sau khi đăng nhập. Hạn mức dùng chung theo tài khoản và mạng.</p>
+    <ul>
+      <li>Hạn dùng: <b class="free-key-days">6 ngày</b> (tính từ lần kích hoạt đầu tiên)</li>
+      <li>1 key dùng cho 1 thiết bị (gắn HWID)</li>
+      <li>Định dạng: <code>TELE:@okvipmod-ASTRA-XXXX</code></li>
+      <li>Dán key vào ứng dụng <b>ASTRA @okvipmod</b> để đăng nhập, sau đó chọn FF TH và inject.</li>
+    </ul>
+    <button class="main" id="btn-astra" onclick="make('astra')">TẠO KEY ASTRA</button>
+    <div class="err" id="err-astra" role="alert"></div>
+    <div class="out" id="out-astra">
+      <div class="key" id="key-astra" onclick="copyKey('astra')"></div>
+      <div class="hint" id="hint-astra">Bấm vào key để copy</div>
+      <div class="hint" id="pw-astra"></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-oxcheats" style="display:none">
+    <h1>Tạo key OKMOD</h1>
+    <p class="sub free-quota-label">Một key dùng cho cả app OKMod iOS và FF proxy 1300. Miễn phí sau khi đăng nhập.</p>
+    <ul>
+      <li>Hạn dùng: <b>24 giờ</b> (tính từ lúc tạo)</li>
+      <li>1 key dùng cho app <b>OKMod iOS</b> + proxy <b>1300</b> (1 thiết bị)</li>
+      <li>Định dạng: <code>OKMOD-XXXXXXXXXXXXXXXXXXXXXXXX</code></li>
+      <li>Dán key vào màn hình đăng nhập của app rồi bấm <b>Launch</b>.</li>
+    </ul>
+    <button class="main" id="btn-oxcheats" onclick="make('oxcheats')">TẠO KEY OKMOD</button>
+    <div class="err" id="err-oxcheats" role="alert"></div>
+    <div class="out" id="out-oxcheats">
+      <div class="key" id="key-oxcheats" onclick="copyKey('oxcheats')"></div>
+      <div class="hint" id="hint-oxcheats">Bấm vào key để copy</div>
+      <div class="hint" id="pw-oxcheats"></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-okmod-swift" style="display:none">
+    <h1>Tạo key OKMOD-SWIFT</h1>
+    <p class="sub free-quota-label">Key cho panel + proxy OKMOD-SWIFT. Miễn phí sau khi đăng nhập.</p>
+    <ul>
+      <li>Hạn dùng: <b>1 ngày</b> (tính từ lúc tạo)</li>
+      <li>1 key dùng cho 1 thiết bị</li>
+      <li>Định dạng: <code>OKMOD-XXXX-XXXX</code></li>
+      <li>Đăng nhập <a href="https://swift.okmod.sbs" target="_blank" rel="noopener">swift.okmod.sbs</a>, Verify IPv4 rồi chọn mode 8811–8816.</li>
+      <li><b>Potatso chỉ dùng để inject.</b> Vào trận thì tắt proxy/Potatso, hoặc dùng config Potatso mới (chỉ route host inject, gameplay đi direct).</li>
+    </ul>
+    <button class="main" id="btn-okmod-swift" onclick="make('okmod-swift')">TẠO KEY OKMOD-SWIFT</button>
+    <div class="err" id="err-okmod-swift" role="alert"></div>
+    <div class="out" id="out-okmod-swift">
+      <div class="key" id="key-okmod-swift" onclick="copyKey('okmod-swift')"></div>
+      <div class="hint" id="hint-okmod-swift">Bấm vào key để copy</div>
+      <div class="hint" id="pw-okmod-swift"></div>
+    </div>
+    <div class="links">
+      <a class="dl" href="https://swift.okmod.sbs" target="_blank" rel="noopener">🌐 Đăng nhập OKMOD-SWIFT</a>
+      <a class="dl" href="https://swift.okmod.sbs/install_profile.mobileconfig">🔒 Cài CA SwiftIOS</a>
+      <a class="dl" href="https://swift.okmod.sbs/potatso.yaml" target="_blank" rel="noopener">📲 Import Potatso (6 port)</a>
+    </div>
+  </div>
+
+
+  <div class="card" id="card-hunterff" style="display:none">
+    <h1>Tạo key HUNTERFF</h1>
+    <p class="sub free-quota-label">Miễn phí sau khi đăng nhập. Hạn mức dùng chung theo tài khoản và mạng.</p>
+    <ul>
+      <li>Hạn dùng: <b class="free-key-days">6 ngày</b> (tính từ lúc tạo key)</li>
+      <li>1 key dùng cho 1 thiết bị / UUID của ứng dụng</li>
+      <li>Định dạng: <code>OKMOD-XXXXXXXXXXXXXXXXXXXXXXXX</code></li>
+      <li>Dán key vào màn hình <b>TELE:@okvipmod</b> trong game để xác thực.</li>
+    </ul>
+    <button class="main" id="btn-hunterff" onclick="make('hunterff')">TẠO KEY HUNTERFF</button>
+    <div class="err" id="err-hunterff" role="alert"></div>
+    <div class="out" id="out-hunterff">
+      <div class="key" id="key-hunterff" onclick="copyKey('hunterff')"></div>
+      <div class="hint" id="hint-hunterff">Bấm vào key để copy</div>
+      <div class="hint" id="pw-hunterff"></div>
+    </div>
+  </div>
+
+  <div class="card" id="card-intex" style="display:none">
+    <h1>Tạo key INTEXX</h1>
+    <p class="sub free-quota-label">Miễn phí sau khi đăng nhập. Hạn mức dùng chung theo tài khoản và mạng.</p>
+    <ul>
+      <li>Hạn dùng: <b class="free-key-days">6 ngày</b> (tính từ lần kích hoạt đầu tiên)</li>
+      <li>1 key dùng cho 1 thiết bị (gắn mã máy)</li>
+      <li>Định dạng: <code>TELE:@okvipmod-XXXX</code></li>
+      <li>Mở menu <b>Khóa</b> trong game, copy mã máy rồi vào <code>okmod.sbs/activate</code> dán mã máy + key.</li>
+    </ul>
+    <button class="main" id="btn-intex" onclick="make('intex')">TẠO KEY INTEXX</button>
+    <div class="err" id="err-intex" role="alert"></div>
+    <div class="out" id="out-intex">
+      <div class="key" id="key-intex" onclick="copyKey('intex')"></div>
+      <div class="hint" id="hint-intex">Bấm vào key để copy</div>
+      <div class="hint" id="pw-intex"></div>
+    </div>
+  </div>
+
+
+  <details class="card" id="free-history">
+    <summary id="free-history-title" style="font-size:17px;font-weight:700;cursor:pointer">Key đã tạo</summary>
+    <p class="portal-help">Xem lại key của tài khoản này kể cả khi đã hết lượt tạo mới. Tải lại trang không làm mất key.</p>
+    <p id="free-history-message" class="portal-help" role="status"></p>
+    <div id="free-history-list"></div>
+    <div class="portal-actions"><button type="button" class="portal-secondary" id="free-history-prev" disabled>← Trước</button><button type="button" class="portal-secondary" id="free-history-refresh">Làm mới</button><button type="button" class="portal-secondary" id="free-history-next" disabled>Sau →</button></div>
+  </details>
+  <a class="tg" href="https://t.me/okvipmod" target="_blank" rel="noopener">✈️ Nhóm Telegram: @okvipmod</a>
+  <div class="foot" id="freeQuotaSummary">Hạn mức dùng chung tất cả mục theo tài khoản và mạng (IP). Đổi thiết bị hoặc tạo thêm tài khoản trên cùng mạng không tăng hạn mức.</div>
+  </section>
+</div>
+
+<script>
+'use strict';
+let generatedAccessToken='', accessAccount=null, freeMintPending=false, freeHistoryPage=1, freeEpoch=0;
+const freeProducts=['mizze','sophia','cio','astra','oxcheats','okmod-swift','intex','hunterff'];
+const freeEndpoints={mizze:'/api/mizze-key',sophia:'/api/free-key',cio:'/cio/api/free',astra:'/api/astra-key',oxcheats:'/api/oxcheats-key','okmod-swift':'/api/okmod-swift-key',intex:'/api/intex-key',hunterff:'/api/hunter-key'};
+const freeNames={mizze:'MIZZE',sophia:'SOPHIA',cio:'CHEATIOSVIP',astra:'ASTRA',oxcheats:'OKMOD','okmod-swift':'OKMOD-SWIFT',intex:'INTEXX',hunterff:'HUNTERFF'};
+const accessElement=id=>document.getElementById(id);
+async function accessRequest(action,body){
+  const response=await fetch('/api/access/'+action,{method:body===undefined?'GET':'POST',credentials:'same-origin',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+  const value=await response.json().catch(()=>({}));
+  if(!response.ok||!value.ok){const error=new Error(value.message||'Không thể kết nối. Vui lòng thử lại.');error.status=response.status;throw error;}
+  return value;
+}
+function clearFreeResults(){
+  freeProducts.forEach(t=>{accessElement('out-'+t).style.display='none';accessElement('key-'+t).textContent='';accessElement('pw-'+t).textContent='';accessElement('pw-'+t).dataset.pw='';accessElement('err-'+t).style.display='none';});
+  accessElement('free-history-list').replaceChildren();
+  accessElement('free-history-message').textContent='';
+}
+function showAccess(view){
+  accessElement('access-dashboard').hidden=true;accessElement('access-auth').hidden=false;
+  ['login','register','generated'].forEach(x=>accessElement('access-'+x).hidden=x!==view);
+  accessElement('nav-login').classList.toggle('active',view==='login');
+  accessElement('nav-register').classList.toggle('active',view!=='login');
+}
+function preferredFreeProduct(){
+  const query=new URLSearchParams(location.search).get('product');
+  if(freeProducts.includes(query))return query;
+  try{const saved=localStorage.getItem('okmod_free_product');if(freeProducts.includes(saved))return saved;}catch{}
+  return 'sophia';
+}
+function updateFreeButtons(){
+  const blocked=freeMintPending||!accessAccount?.policy||accessAccount.blocked||!accessAccount.policy.mint_enabled||accessAccount.remaining<=0;
+  freeProducts.forEach(p=>accessElement('btn-'+p).disabled=!!blocked);
+}
+function showAccessDashboard(account){
+  if(accessAccount?.accountId!==account.accountId)clearFreeResults();
+  accessAccount=account;generatedAccessToken='';freeEpoch++;
+  accessElement('generated-access-token').value='';accessElement('access-token-input').value='';
+  accessElement('access-auth').hidden=true;accessElement('access-dashboard').hidden=false;
+  accessElement('access-account-label').textContent='Tài khoản '+account.accountId.slice(0,8)+' · Đã đăng nhập';
+  const owner=account.accountId;
+  updateFreeButtons();
+  if(account.policy)renderFreePolicy(account);
+  else accessRequest('me').then(value=>{if(accessAccount?.accountId===owner)renderFreePolicy(value);}).catch(error=>{
+    if(accessAccount?.accountId!==owner)return;
+    accessElement('freeQuotaSummary').textContent=error.message;
+    if(error.status===401){accessAccount=null;freeEpoch++;clearFreeResults();showAccess('login');}
+  });
+  switchTab(preferredFreeProduct());
+  loadFreeHistory(1);
+}
+function renderFreePolicy(account){
+  if(!account.policy||!accessAccount||account.accountId!==accessAccount.accountId)return;
+  accessAccount={...accessAccount,...account};
+  const policy=account.policy;
+  const message=account.blocked?'Tài khoản đã bị khóa quyền tạo key.':(!policy.mint_enabled?'Admin đang tạm dừng tạo key.':('Hạn mức: '+account.accountLimit+' key/tài khoản/ngày · '+policy.network_daily+' key/IP/ngày · Còn '+account.remaining+' lượt.'));
+  document.querySelectorAll('.free-quota-label').forEach(element=>element.textContent=message);
+  document.querySelectorAll('.free-key-days').forEach(element=>element.textContent=policy.key_days+' ngày');
+  accessElement('freeQuotaSummary').textContent=message+' Dùng chung tất cả mục, tính theo ngày UTC+7.'+(account.remaining<=0?' Đã hết lượt hôm nay; bạn vẫn có thể sao chép key đã tạo bên dưới.':'');
+  updateFreeButtons();
+}
+async function generateAccessToken(){
+  const button=accessElement('access-register-btn');if(button.disabled)return;
+  button.disabled=true;button.textContent='Đang tạo token...';accessElement('access-register-error').textContent='';
+  try{const result=await accessRequest('register',{});accessAccount=result;generatedAccessToken=result.accessToken;
+    accessElement('generated-access-token').value=generatedAccessToken;showAccess('generated');downloadAccessToken();
+  }catch(error){accessElement('access-register-error').textContent=error.message;}
+  finally{button.disabled=false;button.textContent='Tạo token truy cập';}
+}
+function downloadAccessToken(){
+  if(!generatedAccessToken)return;
+  const contents='OKMOD — Token truy cập\n\n'+generatedAccessToken+'\n\nĐăng nhập: https://okmod.sbs/free\nĐây là thông tin đăng nhập duy nhất của bạn. Hãy giữ file này riêng tư.\n';
+  const url=URL.createObjectURL(new Blob([contents],{type:'text/plain;charset=utf-8'}));
+  const link=document.createElement('a');link.href=url;link.download='okmod-token-'+accessAccount.accountId.slice(0,8)+'.txt';document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),30000);
+  accessElement('access-download-status').textContent='Đã gửi yêu cầu tải file token. Kiểm tra thư mục Tải xuống để lưu bản sao dự phòng. Nếu trình duyệt chưa tải, chọn “Tải lại file”.';
+}
+async function copyFreeText(value){
+  if(navigator.clipboard&&window.isSecureContext){try{await navigator.clipboard.writeText(value);return;}catch{}}
+  const area=document.createElement('textarea');area.value=value;area.setAttribute('readonly','');area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);
+  try{area.focus();area.select();area.setSelectionRange(0,value.length);if(!document.execCommand('copy'))throw new Error('Không sao chép tự động được. Hãy nhấn giữ để chọn và sao chép key.');}
+  finally{area.remove();}
+}
+async function copyAccessToken(){
+  try{await copyFreeText(generatedAccessToken);const button=accessElement('access-copy-btn');button.textContent='Đã sao chép';setTimeout(()=>button.textContent='Sao chép',1800);}
+  catch(error){accessElement('access-generated-error').textContent='Chọn và sao chép token trong ô phía trên.';}
+}
+async function openAccessDashboard(){
+  accessElement('access-generated-error').textContent='';
+  try{showAccessDashboard(await accessRequest('me'));}catch(error){accessElement('access-generated-error').textContent=error.message;}
+}
+accessElement('access-login-form').addEventListener('submit',async event=>{
+  event.preventDefault();const button=accessElement('access-login-btn');if(button.disabled)return;
+  const token=accessElement('access-token-input').value.trim();accessElement('access-login-error').textContent='';
+  if(!/^[0-9a-f]{64}$/i.test(token)){accessElement('access-login-error').textContent='Token truy cập phải có đúng 64 ký tự.';return;}
+  button.disabled=true;button.textContent='Đang đăng nhập...';
+  try{showAccessDashboard(await accessRequest('login',{accessToken:token}));}
+  catch(error){accessElement('access-login-error').textContent=error.message;}
+  finally{button.disabled=false;button.textContent='Truy cập bảng điều khiển';}
+});
+async function logoutAccess(){
+  try{await accessRequest('logout',{});accessAccount=null;generatedAccessToken='';freeEpoch++;accessElement('generated-access-token').value='';clearFreeResults();showAccess('login');}
+  catch(error){accessElement('access-account-label').textContent=error.message;}
+}
+function deviceId(){
+  try{let d=localStorage.getItem('okmod_free_dev');if(!d){d='dev-'+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('okmod_free_dev',d);}return d;}
+  catch{return 'anon-'+Math.random().toString(36).slice(2);}
+}
+function switchTab(t){
+  if(!freeProducts.includes(t))return;
+  freeProducts.forEach(x=>{accessElement('tab-'+x).classList.toggle('on',t===x);accessElement('card-'+x).style.display=t===x?'':'none';});
+  accessElement('brandName').textContent=freeNames[t]+' · TẠO KEY';
+  try{localStorage.setItem('okmod_free_product',t);}catch{}
+  try{const url=new URL(location.href);url.searchParams.set('product',t);history.replaceState(null,'',url);}catch{}
+}
+async function copyKey(t){
+  const value=accessElement('key-'+t).textContent;if(!value)return;
+  const hint=accessElement('hint-'+t);
+  try{await copyFreeText(value);hint.textContent='Đã copy ✓';setTimeout(()=>hint.textContent='Bấm vào key để copy',1500);}
+  catch(error){hint.textContent=error.message;}
+}
+async function copyPw(t){
+  const element=accessElement('pw-'+t),value=element.dataset.pw||'';if(!value)return;
+  try{await copyFreeText(value);element.textContent='Đã copy mật khẩu ✓';setTimeout(()=>element.textContent='Mật khẩu: '+value+' · bấm để copy',1500);}
+  catch(error){element.textContent=error.message;}
+}
+function showFreeKey(product,item,hint){
+  accessElement('key-'+product).textContent=item.key;
+  accessElement('hint-'+product).textContent=hint;
+  const pw=accessElement('pw-'+product);pw.dataset.pw=item.password||'';pw.textContent=item.password?'Mật khẩu: '+item.password+' · bấm để copy':'';
+  accessElement('out-'+product).style.display='block';
+}
+async function loadFreeHistory(page=1){
+  if(!accessAccount)return;
+  const epoch=freeEpoch,owner=accessAccount.accountId;
+  const message=accessElement('free-history-message');message.textContent='Đang tải key đã tạo...';
+  try{
+    const response=await fetch('/api/free-history?page='+page,{credentials:'same-origin'});
+    const value=await response.json().catch(()=>({}));
+    if(epoch!==freeEpoch||accessAccount?.accountId!==owner)return;
+    if(!response.ok||!value.ok)throw new Error(value.message||'Không tải được lịch sử. Vui lòng thử lại.');
+    freeHistoryPage=value.page;
+    const list=accessElement('free-history-list');list.replaceChildren();
+    value.items.forEach(item=>{
+      const row=document.createElement('div');row.className='free-history-row';
+      const title=document.createElement('div');title.className='free-history-label';title.textContent=(freeNames[item.product]||item.product)+' · '+new Date(item.created_at*1000).toLocaleString('vi-VN');row.appendChild(title);
+      const key=document.createElement('div');key.className='free-history-key';key.textContent=item.key||(item.state==='pending'?'Đang xử lý':'Key đã xóa hoặc không còn khả dụng');row.appendChild(key);
+      if(item.key){
+        const button=document.createElement('button');button.type='button';button.className='portal-secondary';button.textContent='Sao chép key';
+        button.onclick=async()=>{try{await copyFreeText(item.key);button.textContent='Đã sao chép';setTimeout(()=>button.textContent='Sao chép key',1500);}catch(error){message.textContent=error.message;}};row.appendChild(button);
+        if(page===1&&freeProducts.includes(item.product)&&!accessElement('key-'+item.product).textContent)showFreeKey(item.product,item,'Key đã tạo trước đó · bấm để copy');
+      }
+      if(item.password){const pw=document.createElement('div');pw.className='free-history-label';pw.textContent='Mật khẩu: '+item.password;row.appendChild(pw);}
+      list.appendChild(row);
+    });
+    message.textContent=value.items.length?'Trang '+value.page+' · Lịch sử cấp key, không thay đổi hạn dùng hoặc lượt tạo.':'Bạn chưa tạo key nào.';
+    accessElement('free-history-prev').disabled=page<=1;
+    accessElement('free-history-next').disabled=!value.has_more;
+  }catch(error){if(epoch===freeEpoch)message.textContent=error.message;}
+}
+async function make(t){
+  if(!freeProducts.includes(t)||freeMintPending||accessElement('btn-'+t).disabled)return;
+  const btn=accessElement('btn-'+t),err=accessElement('err-'+t),old=btn.textContent,owner=accessAccount?.accountId;
+  freeMintPending=true;updateFreeButtons();btn.textContent='ĐANG TẠO...';err.style.display='none';
+  try{
+    const response=await fetch(freeEndpoints[t],{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:deviceId()})});
+    const item=await response.json().catch(()=>({}));
+    if(accessAccount?.accountId!==owner)return;
+    if(!response.ok||!item.ok){
+      err.textContent=String(item.msg||item.message||(response.status===429?'Hôm nay bạn đã dùng đủ lượt tạo key.':'Có lỗi, thử lại sau.')).replaceAll('0XCHEATS','OKMOD');err.style.display='block';
+      if(response.status===429&&item.remaining===0)renderFreePolicy({...accessAccount,remaining:0});
+      if(response.status===401){accessAccount=null;freeEpoch++;clearFreeResults();showAccess('login');accessElement('access-login-error').textContent='Phiên đã hết hạn. Vui lòng đăng nhập lại để tạo key.';}
+    }else{
+      if(Number.isInteger(item.remaining))renderFreePolicy({...accessAccount,remaining:item.remaining});
+      showFreeKey(t,item,'Còn '+item.remaining+' lượt hôm nay · bấm để copy');
+      await loadFreeHistory(1);
+    }
+  }catch(error){if(accessAccount?.accountId===owner){err.textContent='Mất kết nối, thử lại.';err.style.display='block';}}
+  finally{
+    btn.textContent=old;
+    try{if(accessAccount?.accountId===owner)renderFreePolicy(await accessRequest('me'));}catch{}
+    freeMintPending=false;updateFreeButtons();
+  }
+}
+let freePolicyRefreshing=false;
+async function refreshFreePolicy(){
+  const owner=accessAccount?.accountId;
+  if(!owner||freeMintPending||freePolicyRefreshing)return;
+  freePolicyRefreshing=true;
+  try{const value=await accessRequest('me');if(accessAccount?.accountId===owner)renderFreePolicy(value);}
+  catch(error){if(error.status===401&&accessAccount?.accountId===owner){accessAccount=null;freeEpoch++;clearFreeResults();showAccess('login');}}
+  finally{freePolicyRefreshing=false;}
+}
+accessElement('free-history-refresh').onclick=async()=>{await refreshFreePolicy();await loadFreeHistory(freeHistoryPage);};
+accessElement('free-history-prev').onclick=()=>loadFreeHistory(freeHistoryPage-1);
+accessElement('free-history-next').onclick=()=>loadFreeHistory(freeHistoryPage+1);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshFreePolicy();});
+window.addEventListener('focus',refreshFreePolicy);
+setInterval(()=>{if(document.visibilityState==='visible'&&accessAccount?.remaining<=0)refreshFreePolicy();},60000);
+accessRequest('me').then(showAccessDashboard).catch(()=>{});
+
+</script>
+</body>
+</html>
